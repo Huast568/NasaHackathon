@@ -21,7 +21,7 @@ def frame_to_audio(frame, frame_rate, speed=1.0):
 
     # Define the parameters for the audio segment
     original_duration = 1000 / frame_rate  # Duration in milliseconds (adjust as needed)
-    sample_rate = 44100  # Audio sample rate (44.1 kHz is common)
+    sample_rate = 4100  # Audio sample rate (44.1 kHz is common)
 
     frequency = int(np.interp(mean_brightness, [0, 255], [100, 1000]))
     audio_data = generate_sine_wave(sample_rate, frequency, original_duration)
