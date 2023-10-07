@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
 from pydub import AudioSegment
-import time
+import time, os
+
 
 start_time = time.time()
 ####################################
@@ -37,7 +38,7 @@ def frame_to_audio(frame, frame_rate, speed=1.0):
     return audio_segment
 
 # Input video file
-video_file = 'space_video.mp4'
+video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
 
 # Load the video
 cap = cv2.VideoCapture(video_file)
