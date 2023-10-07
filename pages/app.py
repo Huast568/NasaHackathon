@@ -3,6 +3,12 @@ import cv2
 import numpy as np
 
 def app():
+
+    st.set_page_config(
+        page_title="App",
+        page_icon="👂",
+    )
+
     st.title("Image/Video Uploader")
 
     # Choose between image or video using radio buttons
