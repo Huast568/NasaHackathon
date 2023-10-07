@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 from pydub import AudioSegment
+import time
+
+start_time = time.time()
+####################################
 
 def generate_sine_wave(frame_rate, frequency, duration_seconds, amplitude=100):
     angular_frequency = 2 * np.pi * frequency
@@ -85,3 +89,5 @@ audio_clip.export(out_f='output_audio.wav', format='wav')
 
 # Close the video file
 cap.release()
+
+print(f"\033[0;32mTotal time taken: {time.time() - start_time} seconds\033[0m.")
