@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 
 
-st.title("Image/Video Uploader")
+st.title("Space Drawing Sonification")
+st.write("Please select what type of file you would like to get music created for, and then upload an image or video of space.")
 
 if file_type == "Image":
     # Upload image file
