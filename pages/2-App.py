@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 
-st.title("Image/Video Uploader")
+st.title("Image and Video Sonification")
 
 # Choose between image or video using radio buttons
 file_type = st.selectbox("Select file type:", ("Image", "Video"))
