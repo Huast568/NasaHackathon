@@ -12,8 +12,7 @@ def generate_sine_wave(frame_rate, frequency, duration_seconds, amplitude=100):
     num_samples = int(frame_rate * duration_seconds)
     time_points = np.arange(num_samples) / frame_rate  # Generate time points in seconds
     audio_data = np.uint8(amplitude * np.sin(angular_frequency * time_points))
-    return audio_data
-
+    return AudioSegment(audio_data.tobytes(), frame_rate=frame_rate, sample_width=audio_data.itemsize, channels=1)
 
 def frame_to_audio(frame, frame_rate, speed=1.0):
     # Calculate the mean brightness of the frame
@@ -21,15 +20,11 @@ def frame_to_audio(frame, frame_rate, speed=1.0):
 
     # Define the parameters for the audio segment
     original_duration = 1000 / frame_rate  # Duration in milliseconds (adjust as needed)
-    sample_rate = 120000  # Audio sample rate (44.1 kHz is common)
+    sample_rate = 44100  # Audio sample rate (44.1 kHz is common)
 
     frequency = int(np.interp(mean_brightness, [0, 255], [100, 1000]))
-    audio_data = generate_sine_wave(sample_rate, frequency, original_duration)
+    audio_segment = generate_sine_wave(sample_rate, frequency, original_duration)
 
-    # Create an audio segment with the audio data
-    audio_segment = AudioSegment(
-        audio_data.tobytes(), frame_rate=sample_rate, sample_width=audio_data.itemsize, channels=1
-    )
 
     # Modify the duration to change the speed (speedup/slowdown)
     modified_duration = int(original_duration / speed)
