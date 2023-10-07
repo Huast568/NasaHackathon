@@ -1,3 +1,10 @@
+import streamlit as st
+import cv2
+import numpy as np
+
+
+st.title("Image/Video Uploader")
+
 if file_type == "Image":
     # Upload image file
     uploaded_file = st.file_uploader("Upload an image file", type=["jpg", "png", "jpeg"])
