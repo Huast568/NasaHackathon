@@ -27,7 +27,19 @@ class VideotoAudio:
             raise ValueError("Failed to read the frame")
         return frame
 
-    def generate_sine_wave(self, sample_rate, frequency, duration_seconds, amplitude=100):
+    def alter_data(self, width, data, direction):
+        n = width
+        processed_x = []
+        if (direction == 'right'):
+            for i in range(width):
+                processed_x.append(np.mean(data[:,i])*i/width)
+        else:
+            for i in range(width):
+                processed_x.append(np.mean(data[:,i])*n/width)
+                n = n-1
+        return processed_x
+    
+    def generate_sine_wave(self, sample_rate, frequency, duration_seconds, amplitude=10):
         angular_frequency = 2 * np.pi * frequency
         num_samples = int(sample_rate * duration_seconds)
         time_points = np.arange(num_samples) / sample_rate
@@ -44,23 +56,62 @@ class VideotoAudio:
         audio_segment = audio_segment[:modified_duration]
         return audio_segment
 
-    def convert(self, time_taken=False):
+    def convert(self, channels=1):
         self.frame_list = []
         self.audio_clip = None
         
-        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not time_taken))
-        while True:
-            pbar.update(1)
-            ret, frame = self.cap.read()
-            if not ret:
-                break
-            audio_segment = self.frame_to_audio(frame)
-            if self.audio_clip is None:
-                self.audio_clip = audio_segment
-            else:
-                self.audio_clip += audio_segment
-            self.frame_list.append(frame)
-            # self.output_video.write(frame)
+        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN")
+        if channels == 1:
+            while True:
+                pbar.update(1)
+                ret, frame = self.cap.read()
+                if not ret:
+                    break
+                audio_segment = self.frame_to_audio(frame)
+                if self.audio_clip is None:
+                    self.audio_clip = audio_segment
+                else:
+                    self.audio_clip += audio_segment
+                self.frame_list.append(frame)
+
+        elif channels == 2:
+            self.audio_clip_left = None
+            self.audio_clip_right = None
+
+            while True:
+                pbar.update(1)
+                ret, frame = self.cap.read()
+                if not ret:
+                    break
+                # Convert the frame to audio
+                blue_channel, green_channel, red_channel = cv2.split(frame)
+
+                red_alter_right = self.alter_data(self.frame_width, red_channel,'right')
+                red_alter_left = self.alter_data(self.frame_width, red_channel,'left')
+                audio_segment_red_left = self.frame_to_audio(red_alter_left, self.frame_rate)
+                audio_segment_red_right = self.frame_to_audio(red_alter_right, self.frame_rate)
+
+                green_alter_right = self.alter_data(self.frame_width, green_channel,'right')
+                green_alter_left = self.alter_data(self.frame_width, green_channel,'left')
+                audio_segment_green_left = self.frame_to_audio(green_alter_left, self.frame_rate)
+                audio_segment_green_right = self.frame_to_audio(green_alter_right, self.frame_rate)
+
+                blue_alter_right = self.alter_data(self.frame_width, blue_channel,'right')
+                blue_alter_left = self.alter_data(self.frame_width, blue_channel,'left')
+                audio_segment_blue_left = self.frame_to_audio(blue_alter_left, self.frame_rate)
+                audio_segment_blue_right = self.frame_to_audio(blue_alter_right, self.frame_rate)
+
+                # Append the segment to the main audio clip
+                if self.audio_clip_left is None:
+                    self.audio_clip_left = audio_segment_red_left + audio_segment_blue_left+audio_segment_green_left
+                else:
+                    self.audio_clip_left = self.audio_clip_left + audio_segment_red_left+audio_segment_blue_left+audio_segment_green_left
+                
+                if self.audio_clip_right is None:
+                   self.audio_clip_right = audio_segment_red_right+audio_segment_green_right+audio_segment_blue_right
+                else:
+                    self.audio_clip_right = self.audio_clip_right + audio_segment_red_right+audio_segment_green_right+audio_segment_blue_right
+                self.frame_list.append(frame)
 
     def plot_audio_clip(self):
         audio_array = np.array(self.audio_clip.get_array_of_samples())
@@ -73,22 +124,30 @@ class VideotoAudio:
             plt.grid(True)
             plt.show()
         else:
-            print("No audio clip available. Please run the 'convert' method first.")
+            Warning("No audio clip available. Please run the 'convert' method first.")
 
-    def save_audio(self):
-        if self.audio_clip is not None:
-            self.audio_clip.export(self.output_audio_file, format='wav')
-            self.cap.release()
-            # self.output_video.release()
-        else:
-            print("No audio clip available. Please run the 'convert' method first.")
+    def save_audio(self, channels=1):
+        if channels == 1:
+            if self.audio_clip is not None:
+                self.audio_clip.export(self.output_audio_file, format='wav')
+                self.cap.release()
+            else:
+                Warning("No audio clip available. Please run the 'convert' method first.")
+        elif channels == 2:
+            if self.audio_clip_left is not None and self.audio_clip_right is not None:
+                self.audio_clip_left.export("left.wav", format='wav')
+                self.audio_clip_right.export("right.wav", format='wav')
+                self.cap.release()
+            else:
+                Warning("No left, right audio clips available. Please run the 'convert' method first.")
+
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'fireworks.mp4')
+    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
     vto = VideotoAudio(video_file, output_video_file='output_video.mp4', output_audio_file='output_audio.wav')
-    vto.convert(time_taken=True)
-    vto.save_audio()
-    play(vto.audio_clip)
+    vto.convert(channels=1)
+    vto.save_audio(channels=1)
+    # play(vto.audio_clip)
     
 
 if __name__ == "__main__":
