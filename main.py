@@ -194,8 +194,8 @@ class VideotoAudio:
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
-    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=2)
+    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
+    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=1)
     vto.convert()
     vto.save_audio()
     vto.plot_audio_clip()
