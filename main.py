@@ -1,15 +1,16 @@
 import cv2
 import numpy as np
-import time
 import os
 import matplotlib.pyplot as plt
 from pydub import AudioSegment
+from pydub.playback import play
+from tqdm import tqdm
 
 class VideotoAudio:
     def __init__(self, video_file, output_video_file="output_video.mp4", output_audio_file="output_audio.wav"):
         self.video_file = video_file  # Video file name
 
-        self.output_video_file = output_video_file  # Output video file name
+        # self.output_video_file = output_video_file  # Output video file name
         self.output_audio_file = output_audio_file  # Output audio file name
 
         self.cap = cv2.VideoCapture(self.video_file)  # Capture of the video
@@ -17,8 +18,8 @@ class VideotoAudio:
         self.frame_rate = int(self.cap.get(cv2.CAP_PROP_FPS))  # Frame rate of the video
         self.frame_height, self.frame_width, _ = self.get_frame().shape  # Height and width of the video
 
-        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fourcc code of the video
-        self.output_video = cv2.VideoWriter(self.output_video_file, self.fourcc, self.frame_rate, (self.frame_width, self.frame_height))
+        # self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fourcc code of the video
+        # self.output_video = cv2.VideoWriter(self.output_video_file, self.fourcc, self.frame_rate, (self.frame_width, self.frame_height))
 
     def get_frame(self):
         ret, frame = self.cap.read()
@@ -36,7 +37,7 @@ class VideotoAudio:
     def frame_to_audio(self, frame, speed=1.0):
         mean_brightness = np.mean(frame)
         original_duration = 1000 / self.frame_rate
-        sample_rate = 4000
+        sample_rate = 48000
         frequency = int(np.interp(mean_brightness, [0, 255], [100, 1000]))
         audio_segment = self.generate_sine_wave(sample_rate, frequency, original_duration)
         modified_duration = original_duration // speed
@@ -46,9 +47,10 @@ class VideotoAudio:
     def convert(self, time_taken=False):
         self.frame_list = []
         self.audio_clip = None
-        if time_taken:
-            self.start_time = time.time()
+        
+        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="00ff00", disable=(not time_taken))
         while True:
+            pbar.update(1)
             ret, frame = self.cap.read()
             if not ret:
                 break
@@ -56,11 +58,9 @@ class VideotoAudio:
             if self.audio_clip is None:
                 self.audio_clip = audio_segment
             else:
-                self.audio_clip = self.audio_clip + audio_segment
+                self.audio_clip += audio_segment
             self.frame_list.append(frame)
-            self.output_video.write(frame)
-        if time_taken:
-            print(f"\033[0;32mTotal time taken: {time.time() - self.start_time} seconds\033[0m.")
+            # self.output_video.write(frame)
 
     def plot_audio_clip(self):
         audio_array = np.array(self.audio_clip.get_array_of_samples())
@@ -79,17 +79,18 @@ class VideotoAudio:
     def save_audio(self):
         if self.audio_clip is not None:
             self.audio_clip.export(self.output_audio_file, format='wav')
+            self.cap.release()
+            # self.output_video.release()
         else:
             print("No audio clip available. Please run the 'convert' method first.")
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
+    video_file = os.path.join(os.path.dirname(__file__), 'fireworks.mp4')
     vto = VideotoAudio(video_file, output_video_file='output_video.mp4', output_audio_file='output_audio.wav')
     vto.convert(time_taken=True)
-    vto.output_video.release()
     vto.save_audio()
-    vto.cap.release()
-    vto.plot_audio_clip()
+    play(vto.audio_clip)
+    
 
 if __name__ == "__main__":
     main()
