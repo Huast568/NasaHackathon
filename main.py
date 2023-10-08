@@ -8,7 +8,7 @@ from tqdm import tqdm
 from scipy.io import wavfile
 
 class VideotoAudio:
-    def __init__(self, video_file, output_video_file="output_video.mp4", output_audio_file="output_audio.wav"):
+    def __init__(self, video_file, output_audio_file="output_audio.wav", channels=1):
         self.video_file = video_file  # Video file name
 
         # self.output_video_file = output_video_file  # Output video file name
@@ -19,9 +19,7 @@ class VideotoAudio:
         self.frame_rate = int(self.cap.get(cv2.CAP_PROP_FPS))  # Frame rate of the video
         self.frame_height, self.frame_width, _ = self.get_frame().shape  # Height and width of the video
 
-        # self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Fourcc code of the video
-        # self.output_video = cv2.VideoWriter(self.output_video_file, self.fourcc, self.frame_rate, (self.frame_width, self.frame_height))
-
+        self.channels = channels
     def get_frame(self):
         ret, frame = self.cap.read()
         if not ret:
@@ -55,7 +53,7 @@ class VideotoAudio:
         audio_segment = audio_segment[:modified_duration]
         return audio_segment
 
-    def convert(self, channels=1, p_bar=True):
+    def convert(self, p_bar=True):
         self.frame_list = []
 
         #audio clips that will turn into stereo and the final clip
@@ -64,7 +62,7 @@ class VideotoAudio:
         self.audio_clip = None
         
         pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not p_bar))
-        if channels == 1:
+        if self.channels == 1:
             while True:
                 pbar.update(1)
                 ret, frame = self.cap.read()
@@ -76,7 +74,7 @@ class VideotoAudio:
                 else:
                     self.audio_clip += audio_segment
                 self.frame_list.append(frame)
-        if channels == 2:
+        if self.channels == 2:
             self.audio_clip_left = None
             self.audio_clip_right = None
 
@@ -118,7 +116,7 @@ class VideotoAudio:
 
 
     def plot_audio_clip(self, channel=1):
-        if channel == 1:
+        if self.channels == 1:
             if self.audio_clip is not None:
                 audio_array = np.array(self.audio_clip.get_array_of_samples())
                 plt.figure(figsize=(10, 4))
@@ -130,7 +128,7 @@ class VideotoAudio:
                 plt.show()
             else:
                 print("No audio clip available. Please run the 'convert' method first.")
-        if channel == 2:
+        if self.channels == 2:
             if self.audio_clip_left is not None and self.audio_clip_right is not None:
                 audio_array_left = np.array(self.audio_clip_left.get_array_of_samples())
                 audio_array_right = np.array(self.audio_clip_right.get_array_of_samples())
@@ -165,14 +163,14 @@ class VideotoAudio:
 
         # Save the modified stereo audio as a new WAV file
         wavfile.write('stereo_adjusted.wav', sample_rate, stereo_audio)
-    def save_audio(self, channels=1):
-        if channels == 1:
+    def save_audio(self):
+        if self.channels == 1:
             if self.audio_clip is not None:
                 self.audio_clip.export(self.output_audio_file, format='wav')
                 self.cap.release()
             else:
                 Warning("No audio clip available. Please run the 'convert' method first.")
-        elif channels == 2:
+        elif self.channels == 2:
             if self.audio_clip_left is not None and self.audio_clip_right is not None:
                 self.audio_clip_left.export("left.wav", format='wav')
                 self.audio_clip_right.export("right.wav", format='wav')
@@ -182,8 +180,8 @@ class VideotoAudio:
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
-    vto = VideotoAudio(video_file, output_video_file='output_video.mp4', output_audio_file='output_audio.wav')
+    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
+    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=2)
     vto.convert(p_bar=True)
     vto.save_audio()
     

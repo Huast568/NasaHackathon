@@ -72,7 +72,7 @@ def autotune(audio, sr):
     return psola.vocode(audio, sample_rate=int(sr), target_pitch=corrected_f0, fmin=fmin, fmax=fmax)
 
 def main():
-    arr = ["output_audio.wav"]
+    arr = ["left.wav", "right.wav"]
     for i in range (len(arr)):
         filepath = Path(arr[i])
 
