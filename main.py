@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from pydub import AudioSegment
 from pydub.playback import play
 from tqdm import tqdm
+from scipy.io import wavfile
 
 class VideotoAudio:
     def __init__(self, video_file, output_video_file="output_video.mp4", output_audio_file="output_audio.wav"):
@@ -26,19 +27,18 @@ class VideotoAudio:
         if not ret:
             raise ValueError("Failed to read the frame")
         return frame
-
-    def alter_data(self, width, data, direction):
-        n = width
-        processed_x = []
-        if (direction == 'right'):
-            for i in range(width):
-                processed_x.append(np.mean(data[:,i])*i/width)
-        else:
-            for i in range(width):
-                processed_x.append(np.mean(data[:,i])*n/width)
-                n = n-1
-        return processed_x
     
+    def alter_data(self,data):
+        n = self.frame_rate
+        processed_left = []
+        processed_right = []
+        for i in range(self.frame_rate):
+            mean = np.mean(data[:,i])
+            processed_right.append(mean*i/self.frame_rate)
+            processed_left.append(mean*n/self.frame_rate)
+            n = n-1
+        return processed_left,processed_right
+
     def generate_sine_wave(self, sample_rate, frequency, duration_seconds, amplitude=10):
         angular_frequency = 2 * np.pi * frequency
         num_samples = int(sample_rate * duration_seconds)
@@ -56,11 +56,15 @@ class VideotoAudio:
         audio_segment = audio_segment[:modified_duration]
         return audio_segment
 
-    def convert(self, channels=1):
+    def convert(self, channels=1, p_bar=True):
         self.frame_list = []
+
+        #audio clips that will turn into stereo and the final clip
+        self.audio_clip_left = None
+        self.audio_clip_right = None
         self.audio_clip = None
         
-        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN")
+        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not p_bar))
         if channels == 1:
             while True:
                 pbar.update(1)
@@ -73,8 +77,7 @@ class VideotoAudio:
                 else:
                     self.audio_clip += audio_segment
                 self.frame_list.append(frame)
-
-        elif channels == 2:
+        if channels == 2:
             self.audio_clip_left = None
             self.audio_clip_right = None
 
@@ -113,19 +116,55 @@ class VideotoAudio:
                     self.audio_clip_right = self.audio_clip_right + audio_segment_red_right+audio_segment_green_right+audio_segment_blue_right
                 self.frame_list.append(frame)
 
-    def plot_audio_clip(self):
-        audio_array = np.array(self.audio_clip.get_array_of_samples())
-        if self.audio_clip is not None:
-            plt.figure(figsize=(10, 4))
-            plt.plot(audio_array)
-            plt.title('Audio Clip')
-            plt.xlabel('Sample')
-            plt.ylabel('Amplitude')
-            plt.grid(True)
-            plt.show()
-        else:
-            Warning("No audio clip available. Please run the 'convert' method first.")
 
+    def plot_audio_clip(self, channel=1):
+        if channel == 1:
+            if self.audio_clip is not None:
+                audio_array = np.array(self.audio_clip.get_array_of_samples())
+                plt.figure(figsize=(10, 4))
+                plt.plot(audio_array)
+                plt.title('Audio Clip')
+                plt.xlabel('Sample')
+                plt.ylabel('Amplitude')
+                plt.grid(True)
+                plt.show()
+            else:
+                print("No audio clip available. Please run the 'convert' method first.")
+        if channel == 2:
+            if self.audio_clip_left is not None and self.audio_clip_right is not None:
+                audio_array_left = np.array(self.audio_clip_left.get_array_of_samples())
+                audio_array_right = np.array(self.audio_clip_right.get_array_of_samples())
+                plt.figure(figsize=(10, 4))
+                plt.plot(audio_array_left, label='Left Channel')
+                plt.plot(audio_array_right, label='Right Channel')
+                plt.title('Audio Clip')
+                plt.xlabel('Sample')
+                plt.ylabel('Amplitude')
+                plt.grid(True)
+                plt.show()
+            else:
+                print("No audio clip available. Please run the 'convert' method first.")
+
+    def save_audio(self):
+        sample_rate, left_audio = wavfile.read('left.wav')
+        sample_rate, right_audio = wavfile.read('right.wav')
+
+            # Duplicate the mono audio to create a stereo signal
+        stereo_audio = np.column_stack((left_audio, right_audio))
+
+            # Save the stereo audio as a WAV file
+        wavfile.write('stereo_audio.wav', sample_rate, stereo_audio)
+            # self.output_video.release()
+        sample_rate, stereo_audio = wavfile.read('stereo_audio.wav')
+
+        # Define a gain factor for the left ear (0.5 for half volume)
+        left_ear_gain = 0.1
+
+        # Apply the gain to the left channel while keeping the right channel unchanged
+        stereo_audio[:, 1] = (stereo_audio[:, 1] * left_ear_gain).astype(np.uint8)
+
+        # Save the modified stereo audio as a new WAV file
+        wavfile.write('stereo_adjusted.wav', sample_rate, stereo_audio)
     def save_audio(self, channels=1):
         if channels == 1:
             if self.audio_clip is not None:
@@ -143,11 +182,10 @@ class VideotoAudio:
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
+    video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
     vto = VideotoAudio(video_file, output_video_file='output_video.mp4', output_audio_file='output_audio.wav')
-    vto.convert(channels=1)
-    vto.save_audio(channels=1)
-    # play(vto.audio_clip)
+    vto.convert(p_bar=True)
+    vto.save_audio()
     
 
 if __name__ == "__main__":
