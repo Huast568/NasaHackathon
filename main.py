@@ -47,22 +47,17 @@ class VideotoAudio:
     def frame_to_audio(self, mean_brightness, speed=1.0):
         original_duration = 1000 / self.frame_rate
         sample_rate = 48000
-        frequency = int(np.interp(mean_brightness, [0, 20*255], [65.4, 2093]))
+        frequency = int(np.interp(mean_brightness, [0, 255], [100, 1000]))
         audio_segment = self.generate_sine_wave(sample_rate, frequency, original_duration)
         modified_duration = original_duration // speed
         audio_segment = audio_segment[:modified_duration]
         return audio_segment
 
     def convert(self, p_bar=True):
-        self.frame_list = []
-
-        #audio clips that will turn into stereo and the final clip
-        self.audio_clip_left = None
-        self.audio_clip_right = None
-        self.audio_clip = None
         
         pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not p_bar))
         if self.channels == 1:
+            self.audio_clip = None
             while True:
                 pbar.update(1)
                 ret, frame = self.cap.read()
@@ -73,7 +68,6 @@ class VideotoAudio:
                     self.audio_clip = audio_segment
                 else:
                     self.audio_clip += audio_segment
-                self.frame_list.append(frame)
         if self.channels == 2:
             self.audio_clip_left = None
             self.audio_clip_right = None
@@ -112,10 +106,8 @@ class VideotoAudio:
                    self.audio_clip_right = right
                 else:
                     self.audio_clip_right = self.audio_clip_right + right
-                self.frame_list.append(frame)
 
-
-    def plot_audio_clip(self, channel=1):
+    def plot_audio_clip(self):
         if self.channels == 1:
             if self.audio_clip is not None:
                 audio_array = np.array(self.audio_clip.get_array_of_samples())
@@ -166,9 +158,9 @@ class VideotoAudio:
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
+    video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
     vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=2)
-    vto.convert(p_bar=True)
+    vto.convert()
     vto.save_audio()
     
 
