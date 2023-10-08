@@ -34,7 +34,3 @@ elif file_type == "Video":
         # You can save the uploaded video file to a variable if needed
         video_bytes = uploaded_file.read()
         st.write("Video file size:", len(video_bytes), "bytes")
-
-        # You can also save the video file to disk using a file path
-        # with open("uploaded_video.mp4", "wb") as f:
-        #     f.write(video_bytes)

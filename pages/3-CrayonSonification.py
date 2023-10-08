@@ -6,6 +6,8 @@ import numpy as np
 st.title("Space Drawing Sonification")
 st.write("Please select what type of file you would like to get music created for, and then upload an image or video of space.")
 
+file_type = st.selectbox("Select file type:", ("Image", "Video"))
+
 if file_type == "Image":
     # Upload image file
     uploaded_file = st.file_uploader("Upload an image file", type=["jpg", "png", "jpeg"])
