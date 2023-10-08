@@ -4,6 +4,7 @@ import scipy.signal as sig
 from pathlib import Path
 import soundfile as sf
 import psola
+from pydub import AudioSegment
 
 class Autotuner:
     def __init__(self, scale):
@@ -66,19 +67,21 @@ def main():
     autotune = Autotuner(scale='F#:maj')
 
     # Load and process the input audio
-    input_filepath = Path("output_audio.wav")
-    
-    y, sr = librosa.load(input_filepath, sr=None, mono=True)
 
-    if y.ndim > 1:
-        y = y[0, :]
+    arr = ["left_R.wav", "left_G.wav", "left_B.wav", "right_R.wav", "right_R.wav", "right_G.wav", "right_B.wav"]
+    for i in range (len(arr)):
+        input_filepath = Path(arr[i])
+        y, sr = librosa.load(arr[i], sr=None, mono=True)
 
-    pitch_corrected_y = autotune.autotune(y, sr)
+        if y.ndim > 1:
+            y = y[0, :]
+
+        pitch_corrected_y = autotune.autotune(y, sr)
 
     # Specify the output file path and write the corrected audio
-    output_filepath = "output_pitch_corrected_audio.wav"
-    sf.write(output_filepath, pitch_corrected_y, sr)
+        output_filepath = input_filepath.parent / (input_filepath.stem + '_pitch_corrected' + input_filepath.suffix)
+        sf.write(output_filepath, pitch_corrected_y, sr)
+        
 
-    
 if __name__=='__main__':
     main()

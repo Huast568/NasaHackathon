@@ -191,24 +191,11 @@ class VideotoAudio:
                 self.cap.release()
             else:
                 Warning("No audio clip available. Please run the 'convert' method first.")
-        elif self.channels == 2:
-            if self.audio_clip_left is not None and self.audio_clip_right is not None:
-                sample_rate, left_audio = wavfile.read('left.wav')
-                sample_rate, right_audio = wavfile.read('right.wav')
-                stereo_audio = np.column_stack((left_audio, right_audio))
-
-                wavfile.write('stereo_audio.wav', sample_rate, stereo_audio)
-                sample_rate, stereo_audio = wavfile.read('stereo_audio.wav')
-                left_ear_gain = 0.1
-                stereo_audio[:, 1] = (stereo_audio[:, 1] * left_ear_gain).astype(np.uint8)
-                wavfile.write('stereo_adjusted.wav', sample_rate, stereo_audio)
-            else:
-                Warning("No left, right audio clips available. Please run the 'convert' method first.")
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
-    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=1)
+    video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
+    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=2)
     vto.convert()
     vto.save_audio()
     vto.plot_audio_clip()
