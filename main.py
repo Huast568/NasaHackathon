@@ -68,44 +68,66 @@ class VideotoAudio:
                     self.audio_clip = audio_segment
                 else:
                     self.audio_clip += audio_segment
+
+        
         if self.channels == 2:
-            self.audio_clip_left = None
-            self.audio_clip_right = None
+            self.audio_clip_left_R = None
+            self.audio_clip_right_R = None
+            self.audio_clip_left_G = None
+            self.audio_clip_right_G = None
+            self.audio_clip_left_B = None
+            self.audio_clip_right_B = None
 
             while True:
                 pbar.update(1)
                 ret, frame = self.cap.read()
                 if not ret:
+                    print("running")
+                    self.audio_clip_left_R.export('left_R.wav', format='wav')
+                    self.audio_clip_left_G.export(out_f='left_G.wav', format='wav')
+                    self.audio_clip_left_B.export(out_f='left_B.wav', format='wav')
+                    self.audio_clip_right_R.export(out_f='right_R.wav',format='wav')
+                    self.audio_clip_right_G.export(out_f='right_G.wav',format='wav')
+                    self.audio_clip_right_B.export(out_f='right_B.wav',format='wav')
                     break
+
                 # Convert the frame to audio
                 blue_channel, green_channel, red_channel = cv2.split(frame)
 
                 red_alter_left,red_alter_right = self.alter_data(red_channel)
 
-                audio_segment_red_left = self.frame_to_audio(5*np.mean(red_alter_left))
-                audio_segment_red_right = self.frame_to_audio(5*np.mean(red_alter_right))
+                audio_segment_red_left = self.frame_to_audio(np.mean(red_alter_left))
+                audio_segment_red_right = self.frame_to_audio(np.mean(red_alter_right))
 
                 green_alter_left,green_alter_right = self.alter_data(green_channel)
-                audio_segment_green_left = self.frame_to_audio(10*np.mean(green_alter_left))
-                audio_segment_green_right = self.frame_to_audio(10*np.mean(green_alter_right))
+                audio_segment_green_left = self.frame_to_audio(np.mean(green_alter_left))
+                audio_segment_green_right = self.frame_to_audio(np.mean(green_alter_right))
 
                 blue_alter_left,blue_alter_right = self.alter_data(blue_channel)
-                audio_segment_blue_left = self.frame_to_audio(20*np.mean(blue_alter_left))
-                audio_segment_blue_right = self.frame_to_audio(20*np.mean(blue_alter_right))
+                audio_segment_blue_left = self.frame_to_audio(np.mean(blue_alter_left))
+                audio_segment_blue_right = self.frame_to_audio(np.mean(blue_alter_right))
 
                 left = audio_segment_blue_left.overlay(audio_segment_red_left.overlay(audio_segment_green_left))
                 right = audio_segment_blue_right.overlay(audio_segment_red_right.overlay(audio_segment_green_right))
 
                 # Append the segment to the main audio clip
-                if self.audio_clip_left is None:
-                    self.audio_clip_left = left
+                if self.audio_clip_left_R is None:
+                    self.audio_clip_left_R = audio_segment_red_left
+                    self.audio_clip_left_G = audio_segment_green_left
+                    self.audio_clip_left_B = audio_segment_blue_left
                 else:
-                    self.audio_clip_left = self.audio_clip_left + left
+                    self.audio_clip_left_R = self.audio_clip_left_R + audio_segment_red_left
+                    self.audio_clip_left_G = self.audio_clip_left_G + audio_segment_green_left
+                    self.audio_clip_left_B = self.audio_clip_left_B + audio_segment_blue_left
                 
-                if self.audio_clip_right is None:
-                   self.audio_clip_right = right
+                if self.audio_clip_right_R is None:
+                    self.audio_clip_right_R = audio_segment_red_right
+                    self.audio_clip_right_G = audio_segment_green_right
+                    self.audio_clip_right_B = audio_segment_blue_right
                 else:
-                    self.audio_clip_right = self.audio_clip_right + right
+                    self.audio_clip_right_R = self.audio_clip_right_R + audio_segment_red_right
+                    self.audio_clip_right_G = self.audio_clip_right_G + audio_segment_green_right
+                    self.audio_clip_right_B = self.audio_clip_right_B + audio_segment_blue_right
 
     def plot_audio_clip(self):
         if self.channels == 1:
@@ -142,23 +164,10 @@ class VideotoAudio:
                 self.cap.release()
             else:
                 Warning("No audio clip available. Please run the 'convert' method first.")
-        elif self.channels == 2:
-            if self.audio_clip_left is not None and self.audio_clip_right is not None:
-                sample_rate, left_audio = wavfile.read('left.wav')
-                sample_rate, right_audio = wavfile.read('right.wav')
-                stereo_audio = np.column_stack((left_audio, right_audio))
-
-                wavfile.write('stereo_audio.wav', sample_rate, stereo_audio)
-                sample_rate, stereo_audio = wavfile.read('stereo_audio.wav')
-                left_ear_gain = 0.1
-                stereo_audio[:, 1] = (stereo_audio[:, 1] * left_ear_gain).astype(np.uint8)
-                wavfile.write('stereo_adjusted.wav', sample_rate, stereo_audio)
-            else:
-                Warning("No left, right audio clips available. Please run the 'convert' method first.")
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
+    video_file = os.path.join(os.path.dirname(__file__), 'galaxy.mp4')
     vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=2)
     vto.convert()
     vto.save_audio()
