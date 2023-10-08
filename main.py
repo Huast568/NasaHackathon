@@ -144,26 +144,6 @@ class VideotoAudio:
                 print("No audio clip available. Please run the 'convert' method first.")
 
     def save_audio(self):
-        sample_rate, left_audio = wavfile.read('left.wav')
-        sample_rate, right_audio = wavfile.read('right.wav')
-
-            # Duplicate the mono audio to create a stereo signal
-        stereo_audio = np.column_stack((left_audio, right_audio))
-
-            # Save the stereo audio as a WAV file
-        wavfile.write('stereo_audio.wav', sample_rate, stereo_audio)
-            # self.output_video.release()
-        sample_rate, stereo_audio = wavfile.read('stereo_audio.wav')
-
-        # Define a gain factor for the left ear (0.5 for half volume)
-        left_ear_gain = 0.1
-
-        # Apply the gain to the left channel while keeping the right channel unchanged
-        stereo_audio[:, 1] = (stereo_audio[:, 1] * left_ear_gain).astype(np.uint8)
-
-        # Save the modified stereo audio as a new WAV file
-        wavfile.write('stereo_adjusted.wav', sample_rate, stereo_audio)
-    def save_audio(self):
         if self.channels == 1:
             if self.audio_clip is not None:
                 self.audio_clip.export(self.output_audio_file, format='wav')
@@ -172,9 +152,15 @@ class VideotoAudio:
                 Warning("No audio clip available. Please run the 'convert' method first.")
         elif self.channels == 2:
             if self.audio_clip_left is not None and self.audio_clip_right is not None:
-                self.audio_clip_left.export("left.wav", format='wav')
-                self.audio_clip_right.export("right.wav", format='wav')
-                self.cap.release()
+                sample_rate, left_audio = wavfile.read('left.wav')
+                sample_rate, right_audio = wavfile.read('right.wav')
+                stereo_audio = np.column_stack((left_audio, right_audio))
+
+                wavfile.write('stereo_audio.wav', sample_rate, stereo_audio)
+                sample_rate, stereo_audio = wavfile.read('stereo_audio.wav')
+                left_ear_gain = 0.1
+                stereo_audio[:, 1] = (stereo_audio[:, 1] * left_ear_gain).astype(np.uint8)
+                wavfile.write('stereo_adjusted.wav', sample_rate, stereo_audio)
             else:
                 Warning("No left, right audio clips available. Please run the 'convert' method first.")
 
