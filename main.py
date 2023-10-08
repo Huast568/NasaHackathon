@@ -56,7 +56,7 @@ class VideotoAudio:
         audio_segment = audio_segment[:modified_duration]
         return audio_segment
 
-    def convert(self, time_taken=False):
+    def convert(self, p_bar=True):
         self.frame_list = []
 
         #audio clips that will turn into stereo and the final clip
@@ -64,7 +64,7 @@ class VideotoAudio:
         self.audio_clip_right = None
         self.audio_clip = None
         
-        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not time_taken))
+        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not p_bar))
         while True:
             pbar.update(1)
             ret, frame = self.cap.read()
@@ -91,7 +91,7 @@ class VideotoAudio:
             left = audio_segment_blue_left.overlay(audio_segment_red_left.overlay(audio_segment_green_left))
             right = audio_segment_blue_left.overlay(audio_segment_red_right.overlay(audio_segment_green_right))
 
-    # Append the segment to the main audio clip
+            # Append the segment to the main audio clip
             if self.audio_clip_left is None:
                 self.audio_clip_left = left
             else:
@@ -105,18 +105,33 @@ class VideotoAudio:
             self.frame_list.append(frame)
             # self.output_video.write(frame)
 
-    def plot_audio_clip(self):
-        audio_array = np.array(self.audio_clip.get_array_of_samples())
-        if self.audio_clip is not None:
-            plt.figure(figsize=(10, 4))
-            plt.plot(audio_array)
-            plt.title('Audio Clip')
-            plt.xlabel('Sample')
-            plt.ylabel('Amplitude')
-            plt.grid(True)
-            plt.show()
-        else:
-            print("No audio clip available. Please run the 'convert' method first.")
+    def plot_audio_clip(self, channel=1):
+        if channel == 1:
+            if self.audio_clip is not None:
+                audio_array = np.array(self.audio_clip.get_array_of_samples())
+                plt.figure(figsize=(10, 4))
+                plt.plot(audio_array)
+                plt.title('Audio Clip')
+                plt.xlabel('Sample')
+                plt.ylabel('Amplitude')
+                plt.grid(True)
+                plt.show()
+            else:
+                print("No audio clip available. Please run the 'convert' method first.")
+        if channel == 2:
+            if self.audio_clip_left is not None and self.audio_clip_right is not None:
+                audio_array_left = np.array(self.audio_clip_left.get_array_of_samples())
+                audio_array_right = np.array(self.audio_clip_right.get_array_of_samples())
+                plt.figure(figsize=(10, 4))
+                plt.plot(audio_array_left, label='Left Channel')
+                plt.plot(audio_array_right, label='Right Channel')
+                plt.title('Audio Clip')
+                plt.xlabel('Sample')
+                plt.ylabel('Amplitude')
+                plt.grid(True)
+                plt.show()
+            else:
+                print("No audio clip available. Please run the 'convert' method first.")
 
     def save_audio(self):
         sample_rate, left_audio = wavfile.read('left.wav')
@@ -142,7 +157,7 @@ class VideotoAudio:
 def main():
     video_file = os.path.join(os.path.dirname(__file__), 'colors.mp4')
     vto = VideotoAudio(video_file, output_video_file='output_video.mp4', output_audio_file='output_audio.wav')
-    vto.convert(time_taken=True)
+    vto.convert(p_bar=True)
     vto.save_audio()
     
 
