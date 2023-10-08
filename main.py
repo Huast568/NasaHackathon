@@ -48,7 +48,7 @@ class VideotoAudio:
         self.frame_list = []
         self.audio_clip = None
         
-        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="00ff00", disable=(not time_taken))
+        pbar = tqdm(desc="Processing Audio Frame", total=int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)), colour="GREEN", disable=(not time_taken))
         while True:
             pbar.update(1)
             ret, frame = self.cap.read()
@@ -74,7 +74,6 @@ class VideotoAudio:
             plt.show()
         else:
             print("No audio clip available. Please run the 'convert' method first.")
-
 
     def save_audio(self):
         if self.audio_clip is not None:
