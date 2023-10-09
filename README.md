@@ -13,4 +13,4 @@ To run the image sonifier and art sonifier add their respective branch to your c
 3. Run the program 
 
 # CSA Magnetometer Sonifier
-To run this sonifier add the respective folder to your computer and make sure you have installed the requirements found under ``requirements.txt``
+To run the CSA spectra sonifier add the respective folder to your computer and make sure you have installed the requirements found under ``requirements.txt``
