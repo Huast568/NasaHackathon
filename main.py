@@ -30,13 +30,13 @@ class VideotoAudio:
         return frame
     
     def alter_data(self,data):
-        n = self.frame_rate
+        n = self.frame_width
         processed_left = []
         processed_right = []
-        for i in range(self.frame_rate):
+        for i in range(self.frame_width):
             mean = np.mean(data[:,i])
-            processed_right.append(mean*i/self.frame_rate)
-            processed_left.append(mean*n/self.frame_rate)
+            processed_right.append(mean*i/self.frame_width)
+            processed_left.append(mean*n/self.frame_width)
             n = n-1
         return processed_left,processed_right
     
@@ -194,12 +194,10 @@ class VideotoAudio:
 
 
 def main():
-    video_file = os.path.join(os.path.dirname(__file__), 'space_video.mp4')
-    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=1)
+    video_file = os.path.join(os.path.dirname(__file__), 'milky_way.mp4')
+    vto = VideotoAudio(video_file, output_audio_file='output_audio.wav', channels=2)
     vto.convert()
     vto.save_audio()
-    vto.plot_audio_clip()
-    
 
 if __name__ == "__main__":
     main()
