@@ -4,7 +4,8 @@ import numpy as np
 import getDataStars
 import getDataSpecialObjects
 
-pathToImage = "testImgs/testImgNebula2.jpg"
+ # change this variable to the path to an image and everything will work #
+pathToImage = "testImgs/testImgNebula1.jpg"
 
 image = Image.open(pathToImage)
 hPixels, vPixels = image.size
@@ -84,8 +85,8 @@ while event:
     curColumn += 1
     if curColumn >= hPixels:
         event = False
+    # higher int value here will pass through image faster. lower int value will pass through slower #
     clock.tick(120)
-
 
 pygame.mixer.music.stop()
 pygame.quit()

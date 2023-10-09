@@ -37,7 +37,7 @@ def getDataStars(pathToImage):
                     avgRGBStars[-1][0] += colImagePixels[nextR][nextC][0]
                     avgRGBStars[-1][1] += colImagePixels[nextR][nextC][1]
                     avgRGBStars[-1][2] += colImagePixels[nextR][nextC][2]
-            if 100 < sizeStars[-1] < 10000: # these two variables need to be calibrated
+            if 50 < sizeStars[-1] < 10000: # these two variables need to be calibrated
                 numStars += 1
                 locOnePixelStars.append((i, j))
                 avgRGBStars[-1][0] = avgRGBStars[-1][0] // sizeStars[-1]
