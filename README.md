@@ -2,7 +2,7 @@
 We're very excited to bring you our NASA Sonifier
 
 # Video Sonifier
-To run the video sonifier go to ``https://sonicspace.streamlit.app/``
+To run the video sonifier go to https://sonicspace.streamlit.app/
 
 # Image + Art Sonifier
 code, test images, and required audio for the Image Sonifier and Art Sonifier are in ``image_sonifier`` branch and ``art_sonifier`` branch respectively
