@@ -18,5 +18,5 @@ st.write("5. Creativity and Expression:")
 st.write("Whether you are an artist, musician, or just a space enthusiast, our project provides an avenue for creative expression. Use our sonification tools to create music inspired by the cosmos, turning astronomical data into a unique art form. Your compositions add a new dimension to how we perceive and understand space.")
 st.write(" ")
 st.write("By actively participating in our project, citizen scientists can not only benefit from the wealth of resources and data we offer but also contribute to the broader scientific and educational goals of our mission. Together, we can bridge the gap between the sighted and the visually impaired, enabling individuals from diverse backgrounds to share in the beauty and mysteries of the universe!")
-
-
+st.write(" ")
+st.write("Check out the App Tab of our website to try our sonification tools!")
